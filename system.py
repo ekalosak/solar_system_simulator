@@ -21,13 +21,19 @@ class Planet(object):
             velocity = (0,0),
             mass = 100,
             color = GREEN,
-            size = 20):
+            size = 20,
+            sound = None,
+            channel = 0):
         self.location = np.array([float(l) for l in location])
         self.velocity = np.array([float(v) for v in velocity])
         self.mass = float(mass)
         self.color = color
         self.size = size
         self.validate()
+        self.sound = sound
+        self.maxspeed = np.linalg.norm(self.velocity)
+
+        self.sound.play()
 
     def __repr__(self):
         s = "Planet of mass {} at loc {} w vel {}".format(
@@ -47,6 +53,7 @@ class Planet(object):
         assert self.mass > 0
         assert type(self.location) == np.ndarray
         assert type(self.velocity) == np.ndarray
+        # assert type(self.sound) == pg.mixer.Sound
 
     def move(self, howfar):
         assert type(howfar) == np.ndarray
@@ -60,6 +67,15 @@ class Planet(object):
                 self.color,
                 [int(x) for x in self.location[::-1]],
                 int(self.size))
+
+    def change_volume(self):
+        # This is an art function - determine volume based on velocity
+        if self.maxspeed == 0.0:
+            self.maxspeed = 0.01
+        vol = np.linalg.norm(self.velocity) / self.maxspeed
+        if np.linalg.norm(self.velocity) > self.maxspeed:
+            self.maxspeed = np.linalg.norm(self.velocity)
+        self.sound.set_volume(vol)
 
 class Space(object):
 
@@ -99,11 +115,15 @@ class Space(object):
                     direction = direction / np.linalg.norm(direction)
                     dv = dv + direction + magnitude
             p.velocity = p.velocity + dv
-            log.debug("planet <{}> velocity is <{}>".format(p, dv))
+            # log.debug("planet <{}> velocity is <{}>".format(p, dv))
 
     def draw(self, screen):
         for p in self.planets:
             p.draw(screen)
+
+    def set_volumes(self):
+        for p in self.planets:
+            p.change_volume()
 
 def test(log):
     pass
@@ -111,7 +131,16 @@ def test(log):
 def main(log):
 
     log.debug("initializing app")
+    pg.mixer.pre_init(44100, -16, 2, 2048)
     pg.init()
+
+    # load sounds
+    sounds = []
+    for fn in ['./sounds/ambient.wav',
+            './sounds/water-tarp.wav',
+            './sounds/water-tarp.wav']:
+        pdb.set_trace()
+        sounds.append(pg.mixer.Sound(fn))
 
     # Define planet statuses
     masses = [5, 7, 10]
@@ -128,11 +157,13 @@ def main(log):
         vel = velocities[a]
         color = colors[a]
         size = sizes[a]
+        sound = sounds[a % len(sounds)]
         p = Planet(location=loc,
                 velocity=vel,
                 mass=mass,
                 color=color,
-                size=size)
+                size=size,
+                sound=sound)
         pts.append(p)
 
     # Setup the space
@@ -171,10 +202,13 @@ def main(log):
         # Move time forward
         spc.next_time()
 
-        # Draw
+        # Draw images
         screen.fill(BLACK)
         spc.draw(screen)
         pg.display.flip()
+
+        # Play sounds
+        spc.set_volumes()
 
 if __name__ == "__main__":
     log = utils.make_logger('solar-system')

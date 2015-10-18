@@ -136,17 +136,17 @@ def main(log):
 
     # load sounds
     sounds = []
-    for fn in ['./sounds/ambient.wav',
-            './sounds/water-tarp.wav',
-            './sounds/water-tarp.wav']:
-        pdb.set_trace()
+    for fn in ['./sounds/ambient.wav']*3:
+            # './sounds/water-tarp.wav',
+            # './sounds/water-tarp.wav']:
+        # pdb.set_trace()
         sounds.append(pg.mixer.Sound(fn))
 
     # Define planet statuses
-    masses = [5, 7, 10]
+    masses = [1,20,10]
     locations = [(100,100), (200,400), (300,50)]
     velocities = [(0.1,0.1)]*3
-    colors = RED, GREEN, BLUE
+    colors = RED, GREEN, BLUE, BLACK
     sizes = [4*mass for mass in masses]
     pts = []
 
